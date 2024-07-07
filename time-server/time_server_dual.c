@@ -1,3 +1,8 @@
+// A simple clock server for one time use only xD.
+// Supports dual-stack addressing (both IPv4 and IPv6 simulatenously).
+//
+// $ curl "http://127.0.0.1:8080"  # IPv4
+// $ curl -g "http://[::1]:8080"   # IPv6
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
@@ -20,7 +25,7 @@ int main() {
         char *port = "8080";
         addrinfo hints;
         memset(&hints, 0, sizeof(hints));
-        hints.ai_family = AF_INET;       // listen on an IPv4 address
+        hints.ai_family = AF_INET6;      // listen on an IPv6 address
         hints.ai_socktype = SOCK_STREAM; // use the TCP protocol.
         hints.ai_flags = AI_PASSIVE;     // bind the wildcard address; so we can listen
                                          // on any available network interface.
@@ -37,6 +42,13 @@ int main() {
         int socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
         if (!ISVALIDSOCKET(socket_listen)) {
                 fprintf(stderr, "could not create a new socket. (%d)\n", errno);
+                return 1;
+        }
+
+        // clear IPV6_V6ONLY flag on socket to support both IPv4 and IPv6 addressing at the same time.
+        int option = 0;
+        if (setsockopt(socket_listen, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&option, sizeof(option))) {
+                fprintf(stderr, "could not reset flag[IPV6_V6ONLY].(%d)\n", errno);
                 return 1;
         }
 
@@ -75,11 +87,11 @@ int main() {
                 return 1;
         }
 
-        printf("Client is connected...");
+        printf("Client is connected...\n");
         char address_buffer[100];
         getnameinfo((sockaddr *)&client_address, client_len, address_buffer, sizeof(address_buffer), 0, 0,
                     NI_NUMERICHOST); // NI_NUMERICHOST -> want to see the host name as an IP address.
-        printf("Client: %s\n", address_buffer);
+        printf("Client ip address: %s\n", address_buffer);
 
         printf("Reading request...\n");
         char request[1024];
