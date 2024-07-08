@@ -3,11 +3,11 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 typedef struct ifaddrs ifaddrs;
 
-int main() {
+int main()
+{
 	// addresses holds the list of available network interface addresses in the system.
 	ifaddrs *addresses;
 
@@ -21,8 +21,9 @@ int main() {
 		int is_ip = family == AF_INET || family == AF_INET6;
 
 		// skip non-IP network interfaces.
-		if (!is_ip) continue;
-		
+		if (!is_ip)
+			continue;
+
 		char *adapter_name = addr->ifa_name;
 		char *addr_type = family == AF_INET ? "IPv4" : "IPv6";
 
@@ -30,17 +31,12 @@ int main() {
 		printf("%s\t", addr_type);
 
 		char address[100];
-		const int family_size = 
-			family == AF_INET ? 
-				sizeof(struct sockaddr_in) :
-				sizeof(struct sockaddr_in6);
+		const int family_size = family == AF_INET ?
+						sizeof(struct sockaddr_in) :
+						sizeof(struct sockaddr_in6);
 
-		getnameinfo(
-			addr->ifa_addr, family_size,
-			address, sizeof(address),
-			0, 0,
-			NI_NUMERICHOST
-		);
+		getnameinfo(addr->ifa_addr, family_size, address,
+			    sizeof(address), 0, 0, NI_NUMERICHOST);
 
 		printf("\t%s\n", address);
 	}
